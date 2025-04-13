@@ -62,7 +62,7 @@ jobs:
         export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
         export TARGET_HOST=aarch64-linux-android
         export API=24
-        export PREFIX=/home/curl-android
+        export PREFIX=/home/runner/curl-android
 
     
         git clone --depth=1 https://github.com/curl/curl.git
@@ -80,6 +80,7 @@ jobs:
           --disable-shared \
           --enable-static \
           --without-ssl \
+          --without-libpsl \
           --prefix=${PREFIX}
 
          make -j$(nproc)
@@ -122,8 +123,8 @@ jobs:
           -DANDROID_PLATFORM=android-28 \
           -DBUILD_SHARED_LIBS=OFF \
           -DGGML_OPENCL=ON
-          -DCURL_INCLUDE_DIR=/home/curl-install/include \
-          -DCURL_LIBRARY=/home/curl-install/lib/libcurl.a
+          -DCURL_INCLUDE_DIR=/home/runner/curl-install/include \
+          -DCURL_LIBRARY=/home/runner/curl-install/lib/libcurl.a
 
         ninja
   
