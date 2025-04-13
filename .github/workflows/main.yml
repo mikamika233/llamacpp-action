@@ -18,7 +18,24 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential cmake ninja-build python3 git
+        sudo apt install -y build-essential ninja-build python3 git libcurl4-openssl-dev
+    - name: Install CMake 3.29
+      run: |
+        sudo apt update
+        sudo apt install -y wget
+        
+        wget https://github.com/Kitware/CMake/releases/download/v3.29.0/cmake-3.29.0-linux-x86_64.tar.gz
+        tar -zxvf cmake-3.29.0-linux-x86_64.tar.gz
+
+        sudo mv cmake-3.29.0-linux-x86_64 /opt/cmake-3.29
+
+    
+        sudo ln -s /opt/cmake-3.29/bin/cmake /usr/local/bin/cmake
+        sudo ln -s /opt/cmake-3.29/bin/ctest /usr/local/bin/ctest
+        sudo ln -s /opt/cmake-3.29/bin/cpack /usr/local/bin/cpack
+
+    
+        cmake --version
 
     - name: Install SDK
       run: |
