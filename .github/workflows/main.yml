@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
@@ -77,7 +77,7 @@ jobs:
         zip -r llama-opencl-build.zip ~/dev/llm/llama.cpp/build-android
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: llama-opencl-build
         path: llama-opencl-build.zip
