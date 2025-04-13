@@ -123,8 +123,8 @@ jobs:
           -DANDROID_PLATFORM=android-28 \
           -DBUILD_SHARED_LIBS=OFF \
           -DGGML_OPENCL=ON
-          -DCURL_INCLUDE_DIR=/home/runner/curl-install/include \
-          -DCURL_LIBRARY=/home/runner/curl-install/lib/libcurl.a
+          -DCURL_INCLUDE_DIR=/home/runner/curl-android/include \
+          -DCURL_LIBRARY=/home/runner/curl-android/lib/libcurl.a
 
         ninja
   
