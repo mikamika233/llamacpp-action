@@ -21,7 +21,7 @@ jobs:
         sudo rm -f /usr/local/bin/cmake
         sudo rm -f /usr/local/bin/ctest
         sudo rm -f /usr/local/bin/cpack
-        sudo apt install -y build-essential ninja-build python3 git libcurl4-openssl-dev
+        sudo apt install -y build-essential ninja-build python3 git curl libcurl4-openssl-dev libssl-dev
     - name: Install CMake 3.29
       run: |
         sudo apt update
