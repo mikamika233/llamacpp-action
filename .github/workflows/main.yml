@@ -126,7 +126,7 @@ jobs:
           -DANDROID_ABI=arm64-v8a \
           -DANDROID_PLATFORM=android-28 \
           -DBUILD_SHARED_LIBS=OFF \
-          -DGGML_OPENCL=ON
+          -DGGML_OPENCL=ON \
           -DCURL_INCLUDE_DIR=/home/runner/curl-android/include \
           -DCURL_LIBRARY=/home/runner/curl-android/lib/libcurl.a
 
