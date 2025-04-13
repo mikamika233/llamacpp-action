@@ -85,6 +85,10 @@ jobs:
 
          make -j$(nproc)
          make install
+         
+    - name: Check File
+      run: |     
+        file /home/runner/curl-android/lib/libcurl.a
 
     - name: Install OpenCL Headers and Library
       run: |
