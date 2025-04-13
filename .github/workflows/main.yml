@@ -21,7 +21,7 @@ jobs:
         sudo rm -f /usr/local/bin/cmake
         sudo rm -f /usr/local/bin/ctest
         sudo rm -f /usr/local/bin/cpack
-        sudo apt install -y build-essential ninja-build python3 git curl libcurl4-openssl-dev libssl-dev
+        sudo apt install -y build-essential ninja-build python3 git curl libcurl4-openssl-dev libssl-dev clang llvm git unzip
         
     - name: Install CMake 3.29
       run: |
@@ -52,6 +52,28 @@ jobs:
         rm -rf commandlinetools-linux-8512546_latest.zip
 
         yes | ~/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
+    
+    - name: Download and build zlib for Android
+      run: |
+
+        export NDK_HOME=~/android-sdk/ndk/26.3.11579264
+        export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+        export TARGET_HOST=aarch64-linux-android
+        export API=24
+        export CC=$TOOLCHAIN/bin/${TARGET_HOST}${API}-clang
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+    
+        wget https://zlib.net/zlib-1.2.11.tar.gz
+        tar -xvzf zlib-1.2.11.tar.gz
+        cd zlib-1.2.11
+
+    
+        ./configure --prefix=$HOME/zlib-android --host=aarch64-linux-android
+
+    
+        make -j$(nproc)
+        make install
 
     - name: Build libcurl for Android aarch64
       run: |
@@ -81,6 +103,7 @@ jobs:
           --enable-static \
           --without-ssl \
           --without-libpsl \
+          --with-zlib=$HOME/zlib-android \
           --prefix=${PREFIX}
 
          make -j$(nproc)
@@ -128,7 +151,9 @@ jobs:
           -DBUILD_SHARED_LIBS=OFF \
           -DGGML_OPENCL=ON \
           -DCURL_INCLUDE_DIR=/home/runner/curl-android/include \
-          -DCURL_LIBRARY=/home/runner/curl-android/lib/libcurl.a
+          -DCURL_LIBRARY=/home/runner/curl-android/lib/libcurl.a \
+          -DZLIB_INCLUDE_DIR=/home/runner/zlib-android/include \
+          -DZLIB_LIBRARY=/home/runner/zlib-android/lib/libz.a
 
         ninja
   
