@@ -56,16 +56,17 @@ jobs:
     - name: Download and build zlib for Android
       run: |
 
+        export API=24
         export TARGET_HOST=aarch64-linux-android
         export ANDROID_NDK=/home/runner/android-sdk/ndk/26.3.11579264
-        export SYSROOT=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot
         export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin
-        export CC=$TOOLCHAIN/aarch64-linux-clang
-        export CXX=$TOOLCHAIN/aarch64-linux-clang++
-        export AR=$TOOLCHAIN/aarch64-linux-ar
-        export AS=$TOOLCHAIN/aarch64-linux-as
-        export LD=$TOOLCHAIN/aarch64-linux-ld
-        export RANLIB=$TOOLCHAIN/aarch64-linux-ranlib
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export CC=$TOOLCHAIN/bin/${TARGET_HOST}${API}-clang
+        export AS=$CC
+        export CXX=$TOOLCHAIN/bin/${TARGET_HOST}${API}-clang++
+        export LD=$TOOLCHAIN/bin/ld
+        export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+        export STRIP=$TOOLCHAIN/bin/llvm-strip
 
         export CFLAGS="--sysroot=$SYSROOT -O2"
         export LDFLAGS="--sysroot=$SYSROOT"
