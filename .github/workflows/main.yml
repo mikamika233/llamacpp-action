@@ -18,6 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
+        sudo apt remove -y cmake
         sudo apt install -y build-essential ninja-build python3 git libcurl4-openssl-dev
     - name: Install CMake 3.29
       run: |
