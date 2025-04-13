@@ -88,7 +88,7 @@ jobs:
          
     - name: Check File
       run: |     
-        file /home/runner/curl-android/lib/libcurl.a
+        ls /home/runner/curl-android/
 
     - name: Install OpenCL Headers and Library
       run: |
