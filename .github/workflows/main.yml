@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential cmake ninja python3 git
+        sudo apt install -y build-essential cmake ninja-build python3 git
 
     - name: Install SDK
       run: |
