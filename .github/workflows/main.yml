@@ -53,7 +53,7 @@ jobs:
 
         yes | ~/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
     
-     - name: Build libcurl for Android aarch64
+    - name: Build libcurl for Android aarch64
       run: |
         cd ~ && wget https://github.com/ibaoger/libcurl-android/releases/download/2.1.0/libcurl-android.zip
         cd ~ && unzip libcurl-android.zip
