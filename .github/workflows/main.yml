@@ -1,0 +1,152 @@
+name: Build llama.cpp with OpenCL (CLBlast) on Ubuntu 22.04
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-opencl:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo rm -f /usr/local/bin/cmake
+        sudo rm -f /usr/local/bin/ctest
+        sudo rm -f /usr/local/bin/cpack
+        sudo apt install -y build-essential ninja-build python3 git curl libcurl4-openssl-dev libssl-dev clang llvm git unzip
+        
+    - name: Install CMake 3.29
+      run: |
+        sudo apt update
+        sudo apt install -y wget
+        
+        wget https://github.com/Kitware/CMake/releases/download/v3.29.0/cmake-3.29.0-linux-x86_64.tar.gz
+        tar -zxvf cmake-3.29.0-linux-x86_64.tar.gz
+
+        sudo mv cmake-3.29.0-linux-x86_64 /opt/cmake-3.29
+
+    
+        sudo ln -s /opt/cmake-3.29/bin/cmake /usr/local/bin/cmake
+        sudo ln -s /opt/cmake-3.29/bin/ctest /usr/local/bin/ctest
+        sudo ln -s /opt/cmake-3.29/bin/cpack /usr/local/bin/cpack
+
+    
+        cmake --version
+
+    - name: Install SDK
+      run: |
+        cd ~
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip && \
+        unzip commandlinetools-linux-8512546_latest.zip && \
+        mkdir -p ~/android-sdk/cmdline-tools && \
+        mv cmdline-tools latest && \
+        mv latest ~/android-sdk/cmdline-tools/ && \
+        rm -rf commandlinetools-linux-8512546_latest.zip
+
+        yes | ~/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
+    
+    - name: Download and build zlib for Android
+      run: |
+
+        git clone https://github.com/bmonroigj/zlib-android-build
+        cd zlib-android-build && chmod +x build_zlib && ./build_zlib --ndk-dir ~/android-sdk/ndk/26.3.11579264 --android-abi arm64 --android-api-level 24 --zlib-version 1.3.1 --build-type release --static
+      
+    - name: Build libcurl for Android aarch64
+      run: |
+        set -e
+        
+        export NDK_HOME=~/android-sdk/ndk/26.3.11579264
+        export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+        export TARGET_HOST=aarch64-linux-android
+        export API=24
+        export PREFIX=/home/runner/curl-android
+
+    
+        git clone --depth=1 https://github.com/curl/curl.git
+        cd curl
+
+        ./buildconf
+
+        export CC=$TOOLCHAIN/bin/${TARGET_HOST}${API}-clang
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+
+        ./configure \
+          --host=${TARGET_HOST} \
+          --with-pic \
+          --disable-shared \
+          --enable-static \
+          --without-ssl \
+          --without-libpsl \
+          --with-zlib=$HOME/zlib-android-build/output/zlib-1.3.1/Release/arm64-v8a \
+          --prefix=${PREFIX}
+
+         make -j$(nproc)
+         make install
+         
+    - name: Check File
+      run: |     
+        ls /home/runner/curl-android/
+
+    - name: Install OpenCL Headers and Library
+      run: |
+        mkdir -p ~/dev/llm
+        cd ~/dev/llm
+
+        git clone https://github.com/KhronosGroup/OpenCL-Headers && \
+        cd OpenCL-Headers && \
+        cp -r CL ~/android-sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
+
+        cd ~/dev/llm
+
+        git clone https://github.com/KhronosGroup/OpenCL-ICD-Loader && \
+        cd OpenCL-ICD-Loader && \
+        mkdir build_ndk26 && cd build_ndk26 && \
+        cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE=$HOME/android-sdk/ndk/26.3.11579264/build/cmake/android.toolchain.cmake \
+          -DOPENCL_ICD_LOADER_HEADERS_DIR=$HOME/android-sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=24 \
+          -DANDROID_STL=c++_shared && \
+        ninja && \
+        cp libOpenCL.so ~/android-sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android
+
+    - name: Build llama.cpp
+      run: |
+        cd ~/dev/llm
+
+        git clone https://github.com/ggml-org/llama.cpp && \
+        cd llama.cpp && \
+        mkdir build-android && cd build-android
+
+        cmake .. -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE=$HOME/android-sdk/ndk/26.3.11579264/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-28 \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DGGML_OPENCL=ON \
+          -DCURL_INCLUDE_DIR=/home/runner/curl-android/include \
+          -DCURL_LIBRARY=/home/runner/curl-android/lib/libcurl.a \
+          -DZLIB_INCLUDE_DIR=/home/runner/zlib-android-build/output/zlib-1.3.1/Release/arm64-v8a/include \
+          -DZLIB_LIBRARY=/home/runner/zlib-android-build/output/zlib-1.3.1/Release/arm64-v8a/lib/libz.a
+
+        ninja
+  
+    - name: Package binaries
+      run: |
+        zip -r llama-opencl-build.zip ~/dev/llm/llama.cpp/build-android
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: llama-opencl-build
+        path: llama-opencl-build.zip
+
