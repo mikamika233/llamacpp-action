@@ -55,8 +55,9 @@ jobs:
     
     - name: Build libcurl for Android aarch64
       run: |
-        cd ~ && wget https://github.com/ibaoger/libcurl-android/releases/download/2.1.0/libcurl-android.zip
-        cd ~ && unzip libcurl-android.zip
+        
+        cd ~ && export NDK_ROOT=~/android-sdk/ndk/26.3.11579264 && git clone https://github.com/ibaoger/libcurl-android.git && cd libcurl-android && git submodule init && git submodule update && chmod 755 build_for_android.sh && ./build_for_android.sh
+        
    
 
     - name: Install OpenCL Headers and Library
@@ -104,7 +105,7 @@ jobs:
   
     - name: Package binaries
       run: |
-        zip -r llama-opencl-build.zip ~/dev/llm/llama.cpp/build-android
+        zip -r llama-opencl-build.zip ~/dev/llm/llama.cpp/build-android/bin
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
