@@ -59,9 +59,6 @@ jobs:
         
         export NDK_ROOT=~/android-sdk/ndk/26.3.11579264 && git clone https://github.com/ibaoger/libcurl-android.git && cd libcurl-android && git submodule init && git submodule update && chmod 755 build_for_android.sh && ./build_for_android.sh
         
-    - name: Check File
-      run: |     
-        ls /home/runner/curl-android/
 
     - name: Install OpenCL Headers and Library
       run: |
