@@ -98,7 +98,6 @@ jobs:
           -DBUILD_SHARED_LIBS=OFF \
           -DGGML_OPENCL=ON \
           -DLLAMA_CURL=ON \
-          -DCMAKE_CXX_FLAGS="-fopenmp -static-openmp" \
           -DCURL_LIBRARY=~/libcurl-android/libs/arm64-v8a/libcurl.a \
           -DCURL_INCLUDE_DIR=~/libcurl-android/jni/build/curl/arm64-v8a/include
 
