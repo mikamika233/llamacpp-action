@@ -18,7 +18,7 @@ jobs:
         sudo rm -f /usr/local/bin/ctest
         sudo rm -f /usr/local/bin/cpack
         sudo apt install -y build-essential ninja-build python3 git ccache curl libcurl4-openssl-dev libssl-dev clang llvm git unzip autoconf automake libtool m4 groff perl
-        
+
     - name: Install CMake 3.29
       run: |
         sudo apt update
@@ -96,7 +96,7 @@ jobs:
 
     - name: Create GitHub Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: elgohr/github-release-action@v5
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
@@ -107,7 +107,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload release asset
-      uses: actions/upload-release-asset@v1
+      uses: elgohr/github-release-action@v3
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: llama-opencl-build.zip
