@@ -27,18 +27,12 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y wget
-        
         wget https://github.com/Kitware/CMake/releases/download/v3.29.0/cmake-3.29.0-linux-x86_64.tar.gz
         tar -zxvf cmake-3.29.0-linux-x86_64.tar.gz
-
         sudo mv cmake-3.29.0-linux-x86_64 /opt/cmake-3.29
-
-    
         sudo ln -s /opt/cmake-3.29/bin/cmake /usr/local/bin/cmake
         sudo ln -s /opt/cmake-3.29/bin/ctest /usr/local/bin/ctest
         sudo ln -s /opt/cmake-3.29/bin/cpack /usr/local/bin/cpack
-
-    
         cmake --version
 
     - name: Install SDK
@@ -50,27 +44,20 @@ jobs:
         mv cmdline-tools latest && \
         mv latest ~/android-sdk/cmdline-tools/ && \
         rm -rf commandlinetools-linux-8512546_latest.zip
-
         yes | ~/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
-    
+
     - name: Build libcurl for Android aarch64
       run: |
-        
         cd ~ && export NDK_ROOT=~/android-sdk/ndk/26.3.11579264 && git clone https://github.com/ibaoger/libcurl-android.git && cd libcurl-android && git submodule init && git submodule update && chmod 755 build_for_android.sh && ./build_for_android.sh
-        
-   
 
     - name: Install OpenCL Headers and Library
       run: |
         mkdir -p ~/dev/llm
         cd ~/dev/llm
-
         git clone https://github.com/KhronosGroup/OpenCL-Headers && \
         cd OpenCL-Headers && \
         cp -r CL ~/android-sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
-
         cd ~/dev/llm
-
         git clone https://github.com/KhronosGroup/OpenCL-ICD-Loader && \
         cd OpenCL-ICD-Loader && \
         mkdir build_ndk26 && cd build_ndk26 && \
@@ -86,11 +73,9 @@ jobs:
     - name: Build llama.cpp
       run: |
         cd ~/dev/llm
-
         git clone https://github.com/ggml-org/llama.cpp && \
         cd llama.cpp && \
         mkdir build-android && cd build-android
-
         cmake .. -G Ninja \
           -DCMAKE_TOOLCHAIN_FILE=$HOME/android-sdk/ndk/26.3.11579264/build/cmake/android.toolchain.cmake \
           -DANDROID_ABI=arm64-v8a \
@@ -101,9 +86,8 @@ jobs:
           -DGGML_OPENMP=OFF \
           -DCURL_LIBRARY=~/libcurl-android/libs/arm64-v8a/libcurl.a \
           -DCURL_INCLUDE_DIR=~/libcurl-android/jni/build/curl/arm64-v8a/include
-
         ninja
-  
+
     - name: Package binaries
       run: |
         zip -r llama-opencl-build.zip ~/dev/llm/llama.cpp/build-android/bin
@@ -114,3 +98,22 @@ jobs:
         name: llama-opencl-build
         path: llama-opencl-build.zip
 
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: 'Automated release for OpenCL build of llama.cpp'
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: llama-opencl-build.zip
+        asset_name: llama-opencl-build.zip
+        asset_content_type: application/zip
