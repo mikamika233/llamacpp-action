@@ -12,17 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout code
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Install dependencies
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y build-essential git cmake wget unzip
 
-    # 3. Install Android SDK and NDK (Add your requested commands here)
     - name: Install Android SDK and NDK
       run: |
         cd ~
@@ -35,7 +32,6 @@ jobs:
 
         yes | ~/android-sdk/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264"
 
-    # 4. Set up environment for Android NDK
     - name: Set up Android NDK environment
       run: |
         export ANDROID_NDK=$HOME/android-sdk/ndk/26.3.11579264
@@ -43,7 +39,6 @@ jobs:
         echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
         echo "PATH=$PATH" >> $GITHUB_ENV
 
-    # 5. Clone and build BLIS for Android
     - name: Clone and build BLIS for Android
       run: |
         git clone --recursive https://github.com/flame/blis.git
@@ -51,7 +46,6 @@ jobs:
         make -j
         sudo make install
 
-    # 6. Build llama.cpp with BLIS support for Android
     - name: Build llama.cpp with BLIS support for Android
       run: |
         git clone https://github.com/ggml-org/llama.cpp.git
@@ -67,7 +61,6 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
         make -j$(nproc)
 
-    # 7. Package and upload binaries for Android
     - name: Package binaries for Android
       run: |
         zip -r llama-blis-android.zip ~/llama.cpp/build/bin
@@ -77,3 +70,13 @@ jobs:
       with:
         name: llama-blis-android
         path: llama-blis-android.zip
+
+    - name: Create GitHub Release and Upload Binaries
+      uses: elgohr/github-release-action@v1
+      with:
+        files: llama-blis-android.zip
+        tag_name: ${{ github.ref }}
+        release_name: 'Release ${{ github.ref }}'
+        body: 'This release contains Android build with BLIS backend support.'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
