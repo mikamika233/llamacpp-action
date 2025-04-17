@@ -35,6 +35,11 @@ jobs:
         echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
         echo "PATH=$PATH" >> $GITHUB_ENV
 
+    - name: Build libcurl for Android aarch64
+      run: |
+        cd ~ && export NDK_ROOT=~/android-sdk/ndk/26.3.11579264 && git clone https://github.com/ibaoger/libcurl-android.git && cd libcurl-android && git submodule init && git submodule update && chmod 755 build_for_android.sh && ./build_for_android.sh
+
+
     - name: Clone and build BLIS for Android
       run: |
         git clone --recursive https://github.com/flame/blis.git
@@ -54,7 +59,9 @@ jobs:
           -DGGML_BLAS=ON \
           -DGGML_BLAS_VENDOR=FLAME \
           -DANDROID_PLATFORM=android-21 \
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCURL_LIBRARY=~/libcurl-android/libs/arm64-v8a/libcurl.a \
+          -DCURL_INCLUDE_DIR=~/libcurl-android/jni/build/curl/arm64-v8a/include
         make -j$(nproc)
 
     - name: Package binaries for Android
