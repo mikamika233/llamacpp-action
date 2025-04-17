@@ -43,7 +43,7 @@ jobs:
     - name: Clone and build BLIS for Android
       run: |
         git clone --recursive https://github.com/flame/blis.git
-        cd blis && ./configure --enable-cblas -t openmp,pthreads auto
+        cd blis && ./configure --enable-cblas -t openmp,auto
         make -j
         sudo make install
 
