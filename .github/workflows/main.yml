@@ -98,10 +98,8 @@ jobs:
       id: create_release
       uses: elgohr/github-release-action@v5
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: 'Automated release for OpenCL build of llama.cpp'
-        draft: false
+        tag: ${{ github.ref }}
+        title: Release ${{ github.ref }}
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
